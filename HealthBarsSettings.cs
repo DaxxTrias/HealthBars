@@ -39,8 +39,13 @@ public class HealthBarsSettings : ISettings
     public RangeNode<int> DrawDistanceLimit { get; set; } = new(133, 0, 1000);
     public RangeNode<int> ShowMinionOnlyWhenBelowHp { get; set; } = new(50, 1, 100);
     public RangeNode<int> DpsEstimateDuration { get; set; } = new(2000, 500, 10000);
-    public RangeNode<int> CullPercent { get; set; } = new(10, 0, 100);
-
+    [Menu("Culling Strike settings", 100)]
+    public EmptyNode CullingStrike { get; set; }
+    [Menu("Has Culling Strike","You have a source of Culling Strike such as from a passive or support gem", 100)]
+    public ToggleNode HasCullingStrike { get; set; } = new(false);
+    [ConditionalDisplay(nameof(HasCullingStrike), true)]
+    [Menu("Culling Strike Threshold", "If you have Culling the Hordes or some other threshold increase", 100)]
+    public RangeNode<int> CullingThreshold { get; set; } = new(0, 0, 300);
 
     public ColorNode CombatDamageColor { get; set; } = Color.Red;
     public ColorNode CombatHealColor { get; set; } = Color.Green;

@@ -78,7 +78,7 @@ public class HealthBar
             if (IsHidden(Entity))
                 return Color.LightGray;
 
-            if (HpPercent * 100 <= AllSettings.CullPercent)
+            if (ShouldDrawCullingStrikeIndicator())
                 return Settings.CullableColor;
 
             return Settings.LifeColor;
@@ -150,5 +150,21 @@ public class HealthBar
 
             EhpHistory.Enqueue((DateTime.UtcNow, hp));
         }
+    }
+    internal bool ShouldDrawCullingStrikeIndicator()
+    {
+        if (!AllSettings.HasCullingStrike)
+            return false;
+
+        float cullingMultiplier = 1.0f + (AllSettings.CullingThreshold / 100f);
+
+        return Type switch
+        {
+            CreatureType.Normal => HpPercent <= 0.30f * cullingMultiplier,
+            CreatureType.Magic => HpPercent <= 0.20f * cullingMultiplier,
+            CreatureType.Rare => HpPercent <= 0.10f * cullingMultiplier,
+            CreatureType.Unique => HpPercent <= 0.05f * cullingMultiplier,
+            _ => false
+        };
     }
 }
