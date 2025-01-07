@@ -120,8 +120,6 @@ public class HealthBarsSettings : ISettings
         TextFormat = { Value = "{percent}%" },
         ShowDps = { Value = false },
     };
-
-    public LegionSettings LegionSettings { get; set; } = new LegionSettings();
 }
 
 [Submenu(CollapsedByDefault = true)]
@@ -149,6 +147,8 @@ public class UnitSettings
     public ToggleNode CombineLifeAndEs { get; set; } = new(true);
     [Menu(null, "Combines Life and Mana into a single bar that's filled proportionally to the total EHP")]
     public ToggleNode CombineLifeAndMana { get; set; } = new(false);
+    public ToggleNode ManaProtectsLife { get; set; } = new(false);
+
     [ConditionalDisplay(nameof(CombineLifeAndEs), false)]
     public RangeNode<float> EsBarHeight { get; set; } = new(1 / 3f, 0, 1);
 
@@ -206,12 +206,4 @@ public class BossOverlaySettings
     public ToggleNode ShowCastBarStageNames { get; set; } = new ToggleNode(false);
     public ToggleNode ShowMonsterNames { get; set; } = new ToggleNode(true);
     public RangeNode<int> MaxEntries { get; set; } = new(5, 0, 10);
-}
-
-[Submenu(CollapsedByDefault = true)]
-public class LegionSettings
-{
-    public ToggleNode ShowHiddenNormalAndMagicMonsters { get; set; } = new ToggleNode(false);
-    public ToggleNode ShowHiddenRareMonsters { get; set; } = new ToggleNode(true);
-    public ToggleNode ShowHiddenUniqueMonsters { get; set; } = new ToggleNode(true);
 }
