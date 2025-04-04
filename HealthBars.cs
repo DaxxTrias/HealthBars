@@ -49,7 +49,7 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
 
     public override bool Initialise()
     {
-        _windowRectangle = new TimeCache<ExileCore2.Shared.RectangleF>(() =>
+        _windowRectangle = new TimeCache<RectangleF>(() =>
             GameController.Window.GetWindowRectangleReal() with { Location = Vector2.Zero }, 250);
         _ingameUiCheckVisible = new TimeCache<bool>(() =>
             IngameUi.FullscreenPanels.Any(x => x.IsVisibleLocal) ||
@@ -141,13 +141,6 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
         if (!healthBar.Entity.IsAlive) return true;
         if (healthBar.HpPercent < 0.001f) return true;
         if (healthBar.Type == CreatureType.Minion && healthBar.HpPercent * 100 > Settings.ShowMinionOnlyWhenBelowHp) return true;
-        if (healthBar.Entity.League == LeagueType.Legion &&
-            healthBar.Entity.IsHidden &&
-            (healthBar.Entity.Rarity == MonsterRarity.Unique && !Settings.LegionSettings.ShowHiddenUniqueMonsters ||
-             healthBar.Entity.Rarity == MonsterRarity.Rare && !Settings.LegionSettings.ShowHiddenRareMonsters ||
-             healthBar.Entity.Rarity == MonsterRarity.Magic && !Settings.LegionSettings.ShowHiddenNormalAndMagicMonsters ||
-             healthBar.Entity.Rarity == MonsterRarity.White && !Settings.LegionSettings.ShowHiddenNormalAndMagicMonsters))
-            return true;
 
         return false;
     }
@@ -176,7 +169,7 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
         var scaledWidth = healthBar.Settings.Width * WindowRelativeSize.X;
         var scaledHeight = healthBar.Settings.Height * WindowRelativeSize.Y;
 
-        healthBar.DisplayArea = new ExileCore2.Shared.RectangleF(mobScreenCoords.X - scaledWidth / 2f, mobScreenCoords.Y - scaledHeight / 2f, scaledWidth,
+        healthBar.DisplayArea = new RectangleF(mobScreenCoords.X - scaledWidth / 2f, mobScreenCoords.Y - scaledHeight / 2f, scaledWidth,
             scaledHeight);
 
         if (healthBar.Distance > 80 && !_windowRectangle.Value.Intersects(healthBar.DisplayArea))
@@ -268,7 +261,7 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
         var scaledWidth = playerBar.Settings.Width * WindowRelativeSize.X;
         var scaledHeight = playerBar.Settings.Height * WindowRelativeSize.Y;
 
-        var background = new ExileCore2.Shared.RectangleF(result.X, result.Y, 0, 0);
+        var background = new RectangleF(result.X, result.Y, 0, 0);
         background.Inflate(scaledWidth / 2f, scaledHeight / 2f);
         playerBar.DisplayArea = background;
     }
@@ -504,11 +497,13 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
             .Replace("{current}", bar.CurrentEhp.FormatHp())
             .Replace("{total}", bar.MaxEhp.FormatHp())
             .Replace("{currentes}", bar.Life.CurES.FormatHp())
-            .Replace("{currentlife}", bar.Life.CurHP.FormatHp());
+            .Replace("{currentlife}", bar.Life.CurHP.FormatHp())
+            .Replace("{currentmana}", bar.Life.CurMana.FormatHp())
+            ;
     }
 
-    private static readonly HashSet<string> DangerousStages = new HashSet<string>
-    {
+    private static readonly HashSet<string> DangerousStages =
+    [
         "contact",
         "slam",
         "teleport",
@@ -524,11 +519,11 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
         "ice_shard",
         "wind_force",
         "wave",
-    };
+    ];
 
     private static readonly string TexturePrefix = "hb_";
 
-    private void DrawCastBar(HealthBar bar, ExileCore2.Shared.RectangleF area, bool drawStageNames, bool showNextStageName, int maxSkillNameLength)
+    private void DrawCastBar(HealthBar bar, RectangleF area, bool drawStageNames, bool showNextStageName, int maxSkillNameLength)
     {
         if (!bar.Entity.TryGetComponent<Actor>(out var actor))
         {
