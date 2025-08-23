@@ -23,11 +23,11 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ExileCore2">
-      <HintPath>$(exapiPackage)\ExileCore2.dll</HintPath>
+      <HintPath>$(exilecore2Package)\ExileCore2.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="GameOffsets2">
-      <HintPath>$(exapiPackage)\GameOffsets2.dll</HintPath>
+      <HintPath>$(exilecore2Package)\GameOffsets2.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
