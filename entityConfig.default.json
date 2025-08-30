@@ -342,12 +342,15 @@
     "^Metadata/Monsters/traps/MonsterBlastRainTrap": {
       "ignore": true
     },
-          "^Metadata/Monsters/traps/MonsterFireTrap2": {
-        "ignore": true
-      },
-      "^Metadata/Monsters/MarakethSanctumTrial/Hazards/GroundSpike": {
-        "ignore": true
-      },
+    "^Metadata/Monsters/traps/MonsterFireTrap2": {
+      "ignore": true
+    },
+    "^Metadata/Monsters/MarakethSanctumTrial/Hazards/GroundSpike": {
+      "ignore": true
+    },
+    "^Metadata/Monsters/SaltGolem/SaltGolemSanctumTrial": {
+      "ignore": true
+    },
       "^example$": {
       "showCastBar": true,
       "showInBossOverlay": true,
