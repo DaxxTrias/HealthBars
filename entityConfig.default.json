@@ -351,6 +351,9 @@
     "^Metadata/Monsters/SaltGolem/SaltGolemSanctumTrial": {
       "ignore": true
     },
+    "^Metadata/Monsters/MarakethSanctumTrial/Hazards/LaserCrossBeamTurret": {
+      "ignore": true
+    },
       "^example$": {
       "showCastBar": true,
       "showInBossOverlay": true,
