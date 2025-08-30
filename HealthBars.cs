@@ -71,21 +71,34 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
         }
         else
         {
+            var contentToUse = (string)null;
             if (File.Exists(NewConfigCustomPath))
             {
                 try
                 {
-                    var content = File.ReadAllText(NewConfigCustomPath);
-                    _entityConfig = new IndividualEntityConfig(JsonConvert.DeserializeObject<SerializedIndividualEntityConfig>(content));
-                    return;
+                    contentToUse = File.ReadAllText(NewConfigCustomPath);
                 }
                 catch (Exception ex)
                 {
-                    DebugWindow.LogError($"Unable to load custom config file, falling back to default: {ex}");
+                    DebugWindow.LogError($"Unable to read custom config file, falling back to default: {ex}");
                 }
             }
 
-            _entityConfig = LoadEmbeddedConfig();
+            if (contentToUse == null)
+            {
+                contentToUse = GetEmbeddedConfigString();
+                try
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(NewConfigCustomPath));
+                    File.WriteAllText(NewConfigCustomPath, contentToUse);
+                }
+                catch (Exception ex)
+                {
+                    DebugWindow.LogError($"Unable to write default config to disk: {ex}");
+                }
+            }
+
+            _entityConfig = new IndividualEntityConfig(JsonConvert.DeserializeObject<SerializedIndividualEntityConfig>(contentToUse));
         }
     }
 
