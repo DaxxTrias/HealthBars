@@ -388,28 +388,45 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
         }
 
         Graphics.DrawImage(HealthbarTexture, barArea, bar.Settings.BackgroundColor.MultiplyAlpha(alphaMulti));
-        var barSources = new List<(float Current, float Max, Color Color)>();
-        barSources.Add((bar.Life.CurHP, bar.Life.MaxHP, bar.Color));
+
+        // Avoid per-frame List/LINQ allocations for bar segments
+        float totalMax = 0;
+        float curHp = bar.Life.CurHP;
+        float maxHp = bar.Life.MaxHP;
+        totalMax += maxHp;
+        float curEs = 0, maxEs = 0;
         if (bar.Settings.CombineLifeAndEs)
         {
-            barSources.Add((bar.Life.CurES, bar.Life.MaxES, bar.Settings.EsColor));
+            curEs = bar.Life.CurES;
+            maxEs = bar.Life.MaxES;
+            totalMax += maxEs;
         }
-
+        float curMana = 0, maxMana = 0;
         if (bar.Settings.CombineLifeAndMana)
         {
-            barSources.Add((bar.Life.CurMana, bar.Life.MaxMana, bar.Settings.ManaColor));
+            curMana = bar.Life.CurMana;
+            maxMana = bar.Life.MaxMana;
+            totalMax += maxMana;
         }
 
-        var totalPool = barSources.Sum(x => x.Max);
         var currentLeft = barArea.Left;
-        foreach (var barSource in barSources)
+        if (curHp > 0 && totalMax > 0)
         {
-            if (barSource.Current > 0)
-            {
-                var width = barArea.Width * barSource.Current / totalPool;
-                Graphics.DrawImage(HealthbarTexture, barArea with { Left = currentLeft, Width = width }, barSource.Color.MultiplyAlpha(alphaMulti));
-                currentLeft += width;
-            }
+            var width = barArea.Width * curHp / totalMax;
+            Graphics.DrawImage(HealthbarTexture, barArea with { Left = currentLeft, Width = width }, bar.Color.MultiplyAlpha(alphaMulti));
+            currentLeft += width;
+        }
+        if (bar.Settings.CombineLifeAndEs && curEs > 0 && totalMax > 0)
+        {
+            var width = barArea.Width * curEs / totalMax;
+            Graphics.DrawImage(HealthbarTexture, barArea with { Left = currentLeft, Width = width }, bar.Settings.EsColor.MultiplyAlpha(alphaMulti));
+            currentLeft += width;
+        }
+        if (bar.Settings.CombineLifeAndMana && curMana > 0 && totalMax > 0)
+        {
+            var width = barArea.Width * curMana / totalMax;
+            Graphics.DrawImage(HealthbarTexture, barArea with { Left = currentLeft, Width = width }, bar.Settings.ManaColor.MultiplyAlpha(alphaMulti));
+            currentLeft += width;
         }
 
         if (!bar.Settings.CombineLifeAndEs)

@@ -150,6 +150,7 @@ public class HealthBar
             }
 
             EhpHistory.Enqueue((DateTime.UtcNow, hp));
+            _dpsStopwatch.Restart();
         }
     }
     internal bool ShouldDrawCullingStrikeIndicator()
