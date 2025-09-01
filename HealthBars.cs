@@ -39,6 +39,7 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
     private HealthBar _playerBar;
     private CachedValue<bool> _ingameUiCheckVisible;
     private CachedValue<RectangleF> _windowRectangle;
+    private int _configVersion;
 
     public override void OnLoad()
     {
@@ -100,6 +101,10 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
 
             _entityConfig = new IndividualEntityConfig(JsonConvert.DeserializeObject<SerializedIndividualEntityConfig>(contentToUse));
         }
+
+        // bump config version and refresh cached rules on all known entities
+        _configVersion++;
+        RefreshCachedRulesForAll();
     }
 
     private static IndividualEntityConfig LoadEmbeddedConfig()
@@ -161,6 +166,8 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
         healthBar.Skip = SkipHealthBar(healthBar, true);
         if (healthBar.Skip && !ShowInBossOverlay(healthBar)) return;
 
+        EnsureRuleCached(healthBar);
+
         healthBar.CheckUpdate();
         if ((healthBar.Settings?.Show != true ||
              healthBar.Type == CreatureType.Minion && healthBar.HpPercent * 100 > Settings.ShowMinionOnlyWhenBelowHp) &&
@@ -194,6 +201,12 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
         {
             healthBar.Skip = true;
         }
+
+        // if bar is skipped or off-screen, trim DPS history to bound size (avoid stale growth)
+        if (healthBar.Skip && healthBar.EhpHistory.Count > 0)
+        {
+            healthBar.EhpHistory.Clear();
+        }
     }
 
     public override void Tick()
@@ -214,8 +227,22 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
 
     private void TickLogic()
     {
-        foreach (var validEntity in GameController.EntityListWrapper.ValidEntitiesByType[EntityType.Monster]
-                     .Concat(GameController.EntityListWrapper.ValidEntitiesByType[EntityType.Player]))
+        // Split loops to avoid per-frame Concat/enumerator allocs
+        foreach (var validEntity in GameController.EntityListWrapper.ValidEntitiesByType[EntityType.Monster])
+        {
+            var healthBar = validEntity.GetHudComponent<HealthBar>();
+            if (healthBar == null) continue;
+
+            try
+            {
+                HpBarWork(healthBar);
+            }
+            catch (Exception e)
+            {
+                DebugWindow.LogError(e.Message);
+            }
+        }
+        foreach (var validEntity in GameController.EntityListWrapper.ValidEntitiesByType[EntityType.Player])
         {
             var healthBar = validEntity.GetHudComponent<HealthBar>();
             if (healthBar == null) continue;
@@ -288,13 +315,43 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
     {
         if (!_canTick) return;
         var bossOverlayItems = new List<HealthBar>();
-        foreach (var entity in GameController.EntityListWrapper.ValidEntitiesByType[EntityType.Monster]
-                     .Concat(GameController.EntityListWrapper.ValidEntitiesByType[EntityType.Player]))
+
+        foreach (var entity in GameController.EntityListWrapper.ValidEntitiesByType[EntityType.Monster])
         {
-            if (entity.GetHudComponent<HealthBar>() is not { } healthBar)
+            if (entity.GetHudComponent<HealthBar>() is not { } healthBar) continue;
+
+            if (!healthBar.Skip)
             {
-                continue;
+                try
+                {
+                    DrawBar(healthBar);
+                    if (IsCastBarEnabled(healthBar))
+                    {
+                        var lifeArea = healthBar.DisplayArea;
+                        DrawCastBar(healthBar,
+                            lifeArea with
+                            {
+                                Y = lifeArea.Y + lifeArea.Height * (healthBar.Settings.CastBarSettings.YOffset + 1),
+                                Height = healthBar.Settings.CastBarSettings.Height,
+                            }, healthBar.Settings.CastBarSettings.ShowStageNames,
+                            Settings.CommonCastBarSettings.ShowNextStageName,
+                            Settings.CommonCastBarSettings.MaxSkillNameLength);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    DebugWindow.LogError(ex.ToString());
+                }
             }
+
+            if (ShowInBossOverlay(healthBar) && !SkipHealthBar(healthBar, false))
+            {
+                bossOverlayItems.Add(healthBar);
+            }
+        }
+        foreach (var entity in GameController.EntityListWrapper.ValidEntitiesByType[EntityType.Player])
+        {
+            if (entity.GetHudComponent<HealthBar>() is not { } healthBar) continue;
 
             if (!healthBar.Skip)
             {
@@ -652,6 +709,7 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
         }
 
         var healthBar = new HealthBar(entity, Settings);
+        CacheRulesFor(healthBar);
         entity.SetHudComponent(healthBar);
         if (entity.Address == GameController.Player.Address)
         {
@@ -664,14 +722,46 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
         return _pathRuleCache.GetOrAdd(path, p => _entityConfig.Rules.FirstOrDefault(x => x.Regex.IsMatch(p)).Rule ?? new EntityTreatmentRule());
     }
 
+    private void CacheRulesFor(HealthBar bar)
+    {
+        var rule = FindRule(bar.Entity.Path);
+        bar.RuleVersion = _configVersion;
+        bar.RuleShowCastBarOverride = rule.ShowCastBar;
+        bar.RuleShowInBossOverlayOverride = rule.ShowInBossOverlay;
+    }
+
+    private void EnsureRuleCached(HealthBar bar)
+    {
+        if (bar.RuleVersion != _configVersion)
+        {
+            CacheRulesFor(bar);
+        }
+    }
+
+    private void RefreshCachedRulesForAll()
+    {
+        foreach (var e in GameController.EntityListWrapper.ValidEntitiesByType[EntityType.Monster])
+        {
+            var hb = e.GetHudComponent<HealthBar>();
+            if (hb != null) CacheRulesFor(hb);
+        }
+        foreach (var e in GameController.EntityListWrapper.ValidEntitiesByType[EntityType.Player])
+        {
+            var hb = e.GetHudComponent<HealthBar>();
+            if (hb != null) CacheRulesFor(hb);
+        }
+    }
+
     private bool ShowInBossOverlay(HealthBar bar)
     {
+        EnsureRuleCached(bar);
         return Settings.BossOverlaySettings.Show &&
-               (FindRule(bar.Entity.Path).ShowInBossOverlay ?? bar.Settings.IncludeInBossOverlay.Value);
+               (bar.RuleShowInBossOverlayOverride ?? bar.Settings.IncludeInBossOverlay.Value);
     }
 
     private bool IsCastBarEnabled(HealthBar bar)
     {
-        return FindRule(bar.Entity.Path).ShowCastBar ?? bar.Settings.CastBarSettings.Show.Value;
+        EnsureRuleCached(bar);
+        return bar.RuleShowCastBarOverride ?? bar.Settings.CastBarSettings.Show.Value;
     }
 }

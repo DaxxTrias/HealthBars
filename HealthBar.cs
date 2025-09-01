@@ -48,6 +48,11 @@ public class HealthBar
     private HealthBarsSettings AllSettings { get; }
     public long StableId { get; } = Interlocked.Increment(ref _idCounter);
 
+    // Cached rule data (updated by plugin when config version changes)
+    internal int RuleVersion { get; set; }
+    internal bool? RuleShowCastBarOverride { get; set; }
+    internal bool? RuleShowInBossOverlayOverride { get; set; }
+
     public UnitSettings Settings => Type switch
     {
         CreatureType.Player when Entity.Equals(Entity.Player) => AllSettings.Self,
