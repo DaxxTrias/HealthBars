@@ -36,7 +36,7 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
     private bool _canTick = true;
     private IndividualEntityConfig _entityConfig = new IndividualEntityConfig(new SerializedIndividualEntityConfig());
     private Vector2 _oldPlayerCoord;
-    private HealthBar _playerBar;
+    private volatile HealthBar _playerBar;
     private CachedValue<bool> _ingameUiCheckVisible;
     private CachedValue<RectangleF> _windowRectangle;
     private int _configVersion;
@@ -116,6 +116,11 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
     private static string GetEmbeddedConfigString()
     {
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("entityConfig.default.json");
+        if (stream == null)
+        {
+            DebugWindow.LogError("Embedded resource 'entityConfig.default.json' not found. Using empty config.");
+            return "{}";
+        }
         using var reader = new StreamReader(stream);
         var content = reader.ReadToEnd();
         return content;
@@ -327,25 +332,28 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
 
             if (!healthBar.Skip)
             {
-                try
+                if (_windowRectangle.Value.Intersects(healthBar.DisplayArea))
                 {
-                    DrawBar(healthBar);
-                    if (IsCastBarEnabled(healthBar))
+                    try
                     {
-                        var lifeArea = healthBar.DisplayArea;
-                        DrawCastBar(healthBar,
-                            lifeArea with
-                            {
-                                Y = lifeArea.Y + lifeArea.Height * (healthBar.Settings.CastBarSettings.YOffset + 1),
-                                Height = healthBar.Settings.CastBarSettings.Height,
-                            }, healthBar.Settings.CastBarSettings.ShowStageNames,
-                            Settings.CommonCastBarSettings.ShowNextStageName,
-                            Settings.CommonCastBarSettings.MaxSkillNameLength);
+                        DrawBar(healthBar);
+                        if (IsCastBarEnabled(healthBar))
+                        {
+                            var lifeArea = healthBar.DisplayArea;
+                            DrawCastBar(healthBar,
+                                lifeArea with
+                                {
+                                    Y = lifeArea.Y + lifeArea.Height * (healthBar.Settings.CastBarSettings.YOffset + 1),
+                                    Height = healthBar.Settings.CastBarSettings.Height,
+                                }, healthBar.Settings.CastBarSettings.ShowStageNames,
+                                Settings.CommonCastBarSettings.ShowNextStageName,
+                                Settings.CommonCastBarSettings.MaxSkillNameLength);
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    DebugWindow.LogError(ex.ToString());
+                    catch (Exception ex)
+                    {
+                        DebugWindow.LogError(ex.ToString());
+                    }
                 }
             }
 
@@ -360,25 +368,28 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
 
             if (!healthBar.Skip)
             {
-                try
+                if (_windowRectangle.Value.Intersects(healthBar.DisplayArea))
                 {
-                    DrawBar(healthBar);
-                    if (IsCastBarEnabled(healthBar))
+                    try
                     {
-                        var lifeArea = healthBar.DisplayArea;
-                        DrawCastBar(healthBar,
-                            lifeArea with
-                            {
-                                Y = lifeArea.Y + lifeArea.Height * (healthBar.Settings.CastBarSettings.YOffset + 1),
-                                Height = healthBar.Settings.CastBarSettings.Height,
-                            }, healthBar.Settings.CastBarSettings.ShowStageNames,
-                            Settings.CommonCastBarSettings.ShowNextStageName,
-                            Settings.CommonCastBarSettings.MaxSkillNameLength);
+                        DrawBar(healthBar);
+                        if (IsCastBarEnabled(healthBar))
+                        {
+                            var lifeArea = healthBar.DisplayArea;
+                            DrawCastBar(healthBar,
+                                lifeArea with
+                                {
+                                    Y = lifeArea.Y + lifeArea.Height * (healthBar.Settings.CastBarSettings.YOffset + 1),
+                                    Height = healthBar.Settings.CastBarSettings.Height,
+                                }, healthBar.Settings.CastBarSettings.ShowStageNames,
+                                Settings.CommonCastBarSettings.ShowNextStageName,
+                                Settings.CommonCastBarSettings.MaxSkillNameLength);
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    DebugWindow.LogError(ex.ToString());
+                    catch (Exception ex)
+                    {
+                        DebugWindow.LogError(ex.ToString());
+                    }
                 }
             }
 

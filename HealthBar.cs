@@ -18,6 +18,7 @@ public class HealthBar
     private readonly Stopwatch _dpsStopwatch = Stopwatch.StartNew();
     private bool _isHostile;
     private readonly CachedValue<float> _distanceCache;
+    private bool _lastShowDps;
 
     public HealthBar(Entity entity, HealthBarsSettings settings)
     {
@@ -25,6 +26,7 @@ public class HealthBar
         AllSettings = settings;
         _distanceCache = new TimeCache<float>(() => entity.DistancePlayer, 200);
         Update();
+        _lastShowDps = Settings.ShowDps;
     }
 
     public void CheckUpdate()
@@ -37,7 +39,14 @@ public class HealthBar
             Update();
         }
 
-        if (Settings.ShowDps)
+        var currentShowDps = Settings.ShowDps;
+        if (_lastShowDps && !currentShowDps)
+        {
+            EhpHistory.Clear();
+        }
+        _lastShowDps = currentShowDps;
+
+        if (currentShowDps)
         {
             DpsRefresh();
         }
