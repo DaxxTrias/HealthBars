@@ -189,7 +189,11 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
         worldCoords.Z += Settings.GlobalZOffset;
         var mobScreenCoords = Camera.WorldToScreen(worldCoords);
         if (mobScreenCoords == Vector2.Zero) return;
-        mobScreenCoords = Vector2.Lerp(mobScreenCoords, healthBar.LastPosition, healthBar.LastPosition == Vector2.Zero ? 0 : Math.Clamp(Settings.SmoothingFactor, 0, 1));
+        var smooth = Math.Clamp(Settings.SmoothingFactor, 0f, 0.99f);
+        if (healthBar.LastPosition != Vector2.Zero)
+        {
+            mobScreenCoords = Vector2.Lerp(healthBar.LastPosition, mobScreenCoords, 1f - smooth);
+        }
         healthBar.LastPosition = mobScreenCoords;
         var scaledWidth = healthBar.Settings.Width * WindowRelativeSize.X;
         var scaledHeight = healthBar.Settings.Height * WindowRelativeSize.Y;
@@ -298,7 +302,8 @@ public class HealthBars : BaseSettingsPlugin<HealthBarsSettings>
             }
             else
             {
-                result = Vector2.Lerp(result, _oldPlayerCoord, _oldPlayerCoord == Vector2.Zero ? 0 : Math.Max(0, Settings.PlayerSmoothingFactor));
+                var smoothPlayer = Math.Clamp(Settings.PlayerSmoothingFactor, 0f, 0.99f);
+                result = Vector2.Lerp(_oldPlayerCoord, result, 1f - smoothPlayer);
                 _oldPlayerCoord = result;
             }
         }
