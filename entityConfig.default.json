@@ -354,7 +354,7 @@
     "^Metadata/Monsters/MarakethSanctumTrial/Hazards/LaserCrossBeamTurret": {
       "ignore": true
     },
-    "^MMetadata/Monsters/MudBurrower/MudBurrowerBodyDaemon": {
+    "^Metadata/Monsters/MudBurrower/MudBurrowerBodyDaemon": {
       "ignore": true
     },
     "^Metadata/Monsters/JellfishNettler/JellyfishNettlerFlying": {
