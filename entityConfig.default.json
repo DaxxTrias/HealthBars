@@ -348,9 +348,6 @@
     "^Metadata/Monsters/MarakethSanctumTrial/Hazards/GroundSpike": {
       "ignore": true
     },
-    "^Metadata/Monsters/SaltGolem/SaltGolemSanctumTrial": {
-      "ignore": true
-    },
     "^Metadata/Monsters/MarakethSanctumTrial/Hazards/LaserCrossBeamTurret": {
       "ignore": true
     },
