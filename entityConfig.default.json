@@ -354,6 +354,12 @@
     "^Metadata/Monsters/MudBurrower/MudBurrowerBodyDaemon": {
       "ignore": true
     },
+    "^Metadata/Monsters/TormentedSpirits/TormentedSpirit": {
+      "ignore": true
+    },
+    "^Metadata/Monsters/ReaperBoss/EzomyteReaperBoss/Objects/DarknessDaemon": {
+      "ignore": true
+    },
     "^Metadata/Monsters/JellfishNettler/JellyfishNettlerFlying": {
       "ignore": true
     },
