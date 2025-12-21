@@ -363,6 +363,9 @@
     "^Metadata/Monsters/JellfishNettler/JellyfishNettlerFlying": {
       "ignore": true
     },
+    "^Metadata/Monsters/LeagueIncursionNew/Garrison/VaalTrainingDummyIncursion": {
+      "ignore": true
+    },
       "^example$": {
       "showCastBar": true,
       "showInBossOverlay": true,
